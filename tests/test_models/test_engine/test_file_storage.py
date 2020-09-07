@@ -3,7 +3,7 @@
 Contains the TestFileStorageDocs classes
 """
 
-from datetime import datetime
+# from datetime import datetime
 import inspect
 import models
 from models.engine import file_storage
@@ -42,8 +42,7 @@ class TestFileStorageDocs(unittest.TestCase):
         pep8s = pep8.StyleGuide(quiet=True)
         result = pep8s.check_files(['tests/test_models/test_engine/\
 test_file_storage.py'])
-        self.assertEqual(result.total_errors, 0,
-                         "Found code style errors (and warnings).")
+        self.assertEqual(result.total_errors, 0)
 
     def test_file_storage_module_docstring(self):
         """Test for the file_storage.py module docstring"""
@@ -113,3 +112,36 @@ class TestFileStorage(unittest.TestCase):
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get(self):
+        """ """
+        FileStorage._FileStorage__objects = {}
+        storage = FileStorage()
+        state1 = State()
+        storage.new(state1)
+        storage.save()
+        state2 = storage.get(State, state1.id)
+        self.assertEqual(state1.id, state2.id)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_count(self):
+        FileStorage._FileStorage__objects = {}
+        storage = FileStorage()
+        city1 = City()
+        storage.new(city1)
+        city2 = City()
+        storage.new(city2)
+        state1 = State()
+        storage.new(state1)
+        user1 = User()
+        storage.new(user1)
+        user2 = User()
+        storage.new(user2)
+        storage.save()
+
+        self.assertEqual(2, storage.count(City))
+        self.assertEqual(1, storage.count(State))
+        self.assertEqual(2, storage.count(User))
+
+        os.remove("file.json")
