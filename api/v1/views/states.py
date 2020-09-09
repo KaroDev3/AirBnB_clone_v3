@@ -38,8 +38,35 @@ def delete_state(state_id):
 
 @app_views.route('/states', methods=['POST'], strict_slashes=False)
 def post_state():
-    """ """
-    pass
+    """Create and returns the new State with the status code 201"""
+    data = request.get_json()
+    if data is None or type(data) != dict:
+        return make_response("Not a JSON", 400)
+    if "name" not in data:
+        return make_response("Missing name", 400)
+    new_state = State(**data)
+    storage.new(new_state)
+    storage.save()
+    return make_response(jsonify(new_state.to_dict()), 201)
+
+
+@app_views.route('/states/<state_id>', methods=['PUT'], strict_slashes=False)
+def put_state(state_id):
+    """Updates a State object"""
+    target_state = None
+    for state in storage.all(State).values():
+        if state.id == state_id:
+            target_state = state
+    if target_state is None:
+        abort(404)
+    data = request.get_json()
+    if data is None or type(data) != dict:
+        return make_response("Not a JSON", 400)
+    for key, value in data.items():
+        if key not in ['id', 'created_at', 'created_at']:
+            setattr(target_state, key, value)
+    storage.save()
+    return make_response(jsonify(target_state.to_dict()), 200)
 
 
 if __name__ == "__main__":
