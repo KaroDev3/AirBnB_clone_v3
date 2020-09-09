@@ -27,7 +27,7 @@ def get_stats():
     result = {}
     for key, value in classes.items():
         result[key] = storage.count(value)
-    return result
+    return jsonify(result)
 
 
 if __name__ == "__main__":

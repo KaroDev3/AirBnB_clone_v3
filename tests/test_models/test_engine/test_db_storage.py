@@ -101,6 +101,15 @@ class TestFileStorage(unittest.TestCase):
         result = storage.get(State, state.id)
         self.assertEqual(result.id, state.id)
         self.assertEqual(result.created_at, state.created_at)
+
+        # test without a valid class
+        result = storage.get(None, state.id)
+        self.assertEqual(result, None)
+
+        # test without a valid id
+        result = storage.get(State, "this is not a valid ID")
+        self.assertEqual(result, None)
+
         storage.delete(state)
         storage.save()
 

@@ -124,6 +124,14 @@ class TestFileStorage(unittest.TestCase):
         state2 = storage.get(State, state1.id)
         self.assertEqual(state1.id, state2.id)
 
+        # test without a valid class
+        result = storage.get(None, state1.id)
+        self.assertEqual(result, None)
+
+        # test without a valid id
+        result = storage.get(State, "this is not a valid ID")
+        self.assertEqual(result, None)
+
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_count(self):
         """Test count() to get the lenght of a type cls in storage"""
