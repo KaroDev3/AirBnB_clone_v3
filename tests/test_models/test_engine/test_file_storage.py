@@ -115,7 +115,7 @@ class TestFileStorage(unittest.TestCase):
 
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_get(self):
-        """ """
+        """Test get() that get any object with an specific cls and id"""
         FileStorage._FileStorage__objects = {}
         storage = FileStorage()
         state1 = State()
@@ -126,6 +126,7 @@ class TestFileStorage(unittest.TestCase):
 
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_count(self):
+        """Test count() to get the lenght of a type cls in storage"""
         FileStorage._FileStorage__objects = {}
         storage = FileStorage()
         city1 = City()
