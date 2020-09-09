@@ -57,6 +57,7 @@ def put_state(state_id):
     for state in storage.all(State).values():
         if state.id == state_id:
             target_state = state
+            break
     if target_state is None:
         abort(404)
     data = request.get_json()
