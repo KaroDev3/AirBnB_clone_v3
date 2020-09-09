@@ -95,14 +95,18 @@ def put_review(review_id):
     for review in storage.all(Review).values():
         if review.id == review_id:
             target_review = review
+
     if target_review is None:
         abort(404)
+
     data = request.get_json()
     if data is None or type(data) != dict:
         return make_response("Not a JSON", 400)
+
     for key, value in data.items():
-        if key not in ['id', 'created_at', 'created_at']:
-            setattr(target_city, key, value)
+        if key not in ['id', 'created_at', 'updated_at']:
+            setattr(target_review, key, value)
+
     storage.save()
     return make_response(jsonify(target_review.to_dict()), 200)
 
