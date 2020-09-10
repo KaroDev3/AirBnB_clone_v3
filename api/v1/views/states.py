@@ -28,12 +28,12 @@ def get_state(state_id):
                  methods=['DELETE'], strict_slashes=False)
 def delete_state(state_id):
     """Delete a state with a specific id"""
-    for state in storage.all(State).values():
-        if state.id == state_id:
-            storage.delete(state)
-            storage.save()
-            return make_response(jsonify({}), 200)
-    abort(404)
+    state = storage.get(State, state_id)
+    if state is None:
+        abort(404)
+    storage.delete(state)
+    storage.save()
+    return make_response(jsonify({}), 200)
 
 
 @app_views.route('/states', methods=['POST'], strict_slashes=False)
