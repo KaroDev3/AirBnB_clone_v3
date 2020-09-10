@@ -6,6 +6,8 @@ from models import storage
 from models.city import City
 from models.place import Place
 from models.user import User
+from models.state import State
+from models.amenity import Amenity
 
 
 @app_views.route('/cities/<city_id>/places',
@@ -86,6 +88,48 @@ def put_place(place_id):
             setattr(place, key, value)
     storage.save()
     return make_response(jsonify(place.to_dict()), 200)
+
+
+@app_views.route('/places_search',
+                 methods=['POST'], strict_slashes=False)
+def get_places_search():
+    """Get a list with all places"""
+    # check if data is a valid JSON
+    data = request.get_json()
+    if data is None or type(data) != dict:
+        return make_response("Not a JSON", 400)
+
+    places = []
+
+    # retrieves all Places if data is empty
+    states = data.get('states', [])
+    cities = data.get('cities', [])
+    amenities = data.get('amenities', [])
+    if states == [] and cities == [] and amenities == []:
+        for place in storage.all(Place).values():
+            places.append(place.to_dict())
+        return jsonify(places)
+
+    # retrieve all Places of the list of states
+    if states != []:
+        for state_id in data['states']:
+            state = storage.get(State, state_id)
+            if state is not None:
+                for city in state.cities:
+                    for place in city.places:
+                        places.append(place.to_dict())
+
+    # retrieves all Places inside each City
+    if cities != []:
+        for city_id in data['cities']:
+            city = storage.get(City, city_id)
+            if city is not None:
+                for place in city.places:
+                    places.append(place.to_dict())
+
+    # TODO -> handle 'amenities'
+
+    return jsonify(places)
 
 
 if __name__ == "__main__":
