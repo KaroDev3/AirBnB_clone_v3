@@ -18,10 +18,10 @@ def get_all_states():
 @app_views.route('/states/<state_id>', methods=['GET'], strict_slashes=False)
 def get_state(state_id):
     """Get a state with a specific id"""
-    for state in storage.all(State).values():
-        if state.id == state_id:
-            return jsonify(state.to_dict())
-    abort(404)
+    state = storage.get(State, state_id)
+    if state is None:
+        abort(404)
+    return jsonify(state.to_dict())
 
 
 @app_views.route('/states/<state_id>',
@@ -29,8 +29,10 @@ def get_state(state_id):
 def delete_state(state_id):
     """Delete a state with a specific id"""
     state = storage.get(State, state_id)
+
     if state is None:
         abort(404)
+
     storage.delete(state)
     storage.save()
     return make_response(jsonify({}), 200)
@@ -40,10 +42,13 @@ def delete_state(state_id):
 def post_state():
     """Create and returns the new State with the status code 201"""
     data = request.get_json()
+
     if data is None or type(data) != dict:
         return make_response("Not a JSON", 400)
+
     if "name" not in data:
         return make_response("Missing name", 400)
+
     new_state = State(**data)
     storage.new(new_state)
     storage.save()
@@ -53,21 +58,21 @@ def post_state():
 @app_views.route('/states/<state_id>', methods=['PUT'], strict_slashes=False)
 def put_state(state_id):
     """Updates a State object"""
-    target_state = None
-    for state in storage.all(State).values():
-        if state.id == state_id:
-            target_state = state
-            break
-    if target_state is None:
+    state = storage.get(State, state_id)
+
+    if state is None:
         abort(404)
+
     data = request.get_json()
     if data is None or type(data) != dict:
         return make_response("Not a JSON", 400)
+
     for key, value in data.items():
         if key not in ['id', 'created_at', 'updated_at']:
-            setattr(target_state, key, value)
+            setattr(state, key, value)
+
     storage.save()
-    return make_response(jsonify(target_state.to_dict()), 200)
+    return make_response(jsonify(state.to_dict()), 200)
 
 
 if __name__ == "__main__":

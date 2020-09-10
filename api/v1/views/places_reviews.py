@@ -12,17 +12,15 @@ from models.user import User
                  methods=['GET'], strict_slashes=False)
 def get_all_reviews(place_id):
     """Get a list with all reviews of a place"""
-    reviews = []
-    is_valid_id = False
-    for place in storage.all(Place).values():
-        if place.id == place_id:
-            is_valid_id = True
-            break
-    if not is_valid_id:
+    place = storage.get(Place, place_id)
+
+    if place is None:
         abort(404)
-    for review in storage.all(Review).values():
-        if review.place_id == place_id:
-            reviews.append(review.to_dict())
+
+    reviews = []
+    for review in place.reviews:
+        reviews.append(review.to_dict())
+
     return jsonify(reviews)
 
 
@@ -30,22 +28,26 @@ def get_all_reviews(place_id):
                  methods=['GET'], strict_slashes=False)
 def get_review(review_id):
     """Get a review with a specific id"""
-    for review in storage.all(Review).values():
-        if review.id == review_id:
-            return jsonify(review.to_dict())
-    abort(404)
+    review = storage.get(Review, review_id)
+
+    if review is None:
+        abort(404)
+
+    return jsonify(review.to_dict())
 
 
 @app_views.route('/reviews/<review_id>',
                  methods=['DELETE'], strict_slashes=False)
 def delete_review(review_id):
     """Delete a review with a specific id"""
-    for review in storage.all(Review).values():
-        if review.id == review_id:
-            storage.delete(review)
-            storage.save()
-            return make_response(jsonify({}), 200)
-    abort(404)
+    review = storage.get(Review, review_id)
+
+    if review is None:
+        abort(404)
+
+    storage.delete(review)
+    storage.save()
+    return make_response(jsonify({}), 200)
 
 
 @app_views.route('/places/<place_id>/reviews',
@@ -53,12 +55,9 @@ def delete_review(review_id):
 def post_review(place_id):
     """Create and returns the new review with the status code 201"""
     # check if 'place_id' is a valid ID
-    is_valid_id = False
-    for place in storage.all(Place).values():
-        if place.id == place_id:
-            is_valid_id = True
-            break
-    if not is_valid_id:
+    place = storage.get(Place, place_id)
+
+    if place is None:
         abort(404)
 
     # check if data is JSON and has key 'user_id'
@@ -69,12 +68,9 @@ def post_review(place_id):
         return make_response("Missing user_id", 400)
 
     # check if 'user_id' is a valid ID
-    is_valid_id = False
-    for user in storage.all(User).values():
-        if user.id == data['user_id']:
-            is_valid_id = True
-            break
-    if not is_valid_id:
+    user = storage.get(User, data['user_id'])
+
+    if user is None:
         abort(404)
 
     # check if data has key 'text'
@@ -92,24 +88,24 @@ def post_review(place_id):
 @app_views.route('/reviews/<review_id>', methods=['PUT'], strict_slashes=False)
 def put_review(review_id):
     """Updates a Review object"""
-    target_review = None
-    for review in storage.all(Review).values():
-        if review.id == review_id:
-            target_review = review
+    # check if the Review with ID 'review_id' exists
+    review = storage.get(Review, review_id)
 
-    if target_review is None:
+    if review is None:
         abort(404)
 
+    # check if data is a JSON
     data = request.get_json()
     if data is None or type(data) != dict:
         return make_response("Not a JSON", 400)
 
+    # updates the Review
     for key, value in data.items():
         if key not in ['id', 'created_at', 'updated_at']:
-            setattr(target_review, key, value)
+            setattr(review, key, value)
 
     storage.save()
-    return make_response(jsonify(target_review.to_dict()), 200)
+    return make_response(jsonify(review.to_dict()), 200)
 
 
 if __name__ == "__main__":
